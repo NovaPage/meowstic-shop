@@ -1,127 +1,90 @@
-"use client";
-
-import * as React from "react";
-import Image from "next/image";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+// src/app/dashboard/page.tsx
+import ProductsTable from "@/components/products/ProductsTable";
+import { headers } from "next/headers";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import ResponsiveOverlay from "@/components/responsive/ResponsiveOverlay";
+import { Plus } from "lucide-react";
+import { productModel, type Product } from "@/types/product";
 
-export default function DashboardPage() {
-  const [open, setOpen] = React.useState(false);
+/**
+ * Construye una URL base robusta para el fetch del API en SSR.
+ * Usa x-forwarded-* cuando corre detrás de proxy (Vercel, etc).
+ */
+async function getBaseUrl(): Promise<string> {
+  const h = await headers(); // Next 15: async
+  const host = h.get("x-forwarded-host") ?? h.get("host");
+  const proto = h.get("x-forwarded-proto") ?? "http";
+  return host ? `${proto}://${host}` : "";
+}
+
+async function getProducts(): Promise<Product[]> {
+  const h = await headers();
+  const cookie = h.get("cookie") ?? ""; // <-- reenviamos la cookie
+  const baseUrl = await getBaseUrl();
+
+  const res = await fetch(`${baseUrl}/api/products`, {
+    method: "GET",
+    cache: "no-store",
+    // En Server Components, credentials no reenvía cookies automáticamente.
+    // Pásalas explícitamente:
+    headers: { cookie },
+  });
+
+  if (!res.ok) {
+    return [];
+  }
+
+  const json = (await res.json()) as { items?: unknown[] };
+  const rows = Array.isArray(json.items) ? json.items : [];
+  return rows.map((row) => productModel(row as Partial<Product>));
+}
+
+export default async function DashboardPage() {
+  const products = await getProducts();
 
   return (
-    <div className="grid gap-6 md:grid-cols-3">
-      <Card>
-        <CardHeader>
-          <CardTitle>Producto Demo</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <Image
-            src="/next.svg" // dummy image en /public
-            alt="Dummy"
-            width={300}
-            height={180}
-            className="w-full rounded-md border object-cover"
-          />
-          <p className="text-sm text-muted-foreground">
-            Este es un producto de demostración. Solo texto de relleno.
-          </p>
-          <p className="text-xs text-muted-foreground">
-            Uso: pensado para validar la estructura de la UI.
-          </p>
+    <main
+      className="
+        mx-auto max-w-7xl px-4 py-6 space-y-6
+        // Reserve space for the mobile bottom nav (h-14 = 3.5rem) + safe area
+        pb-[calc(env(safe-area-inset-bottom)+3.5rem)]
+        sm:pb-6
+      "
+    >
+      <div className="flex items-center justify-between gap-4">
+        <h1 className="text-xl font-semibold">Productos</h1>
 
-          <ResponsiveOverlay
-            open={open}
-            onOpenChange={setOpen}
-            title="Detalle de producto"
-            description="Información extendida en overlay responsivo"
-            side="bottom"
-          >
-            <div className="space-y-4">
-              <p>
-                Aquí puedes ver un detalle más amplio del producto, usando
-                nuestro componente <strong>ResponsiveOverlay</strong>.
-              </p>
-              <p>
-                En desktop esto se muestra como <em>Dialog</em>, y en mobile
-                como <em>Drawer</em>.
-              </p>
-              <p>
-                El contenido es scrollable si se hace demasiado largo, para no
-                deformar el componente.
-              </p>
-              <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Quos, dicta impedit. Modi maxime cupiditate corrupti molestias, praesentium inventore alias labore ratione magnam dicta sint, corporis illum consequatur voluptatibus enim voluptatum?</p>
-              <p>Phasellus non felis massa. Donec finibus, nulla eu facilisis sodales, est augue venenatis ligula, in convallis erat felis nec nisi. Curabitur at felis ut velit congue convallis. Nulla facilisi.</p>
-              <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Quos, dicta impedit. Modi maxime cupiditate corrupti molestias, praesentium inventore alias labore ratione magnam dicta sint, corporis illum consequatur voluptatibus enim voluptatum?</p>
-              <p>Phasellus non felis massa. Donec finibus, nulla eu facilisis sodales, est augue venenatis ligula, in convallis erat felis nec nisi. Curabitur at felis ut velit congue convallis. Nulla facilisi.</p>
-              <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Quos, dicta impedit. Modi maxime cupiditate corrupti molestias, praesentium inventore alias labore ratione magnam dicta sint, corporis illum consequatur voluptatibus enim voluptatum?</p>
-              <p>Phasellus non felis massa. Donec finibus, nulla eu facilisis sodales, est augue venenatis ligula, in convallis erat felis nec nisi. Curabitur at felis ut velit congue convallis. Nulla facilisi.</p>
-              <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Quos, dicta impedit. Modi maxime cupiditate corrupti molestias, praesentium inventore alias labore ratione magnam dicta sint, corporis illum consequatur voluptatibus enim voluptatum?</p>
-              <p>Phasellus non felis massa. Donec finibus, nulla eu facilisis sodales, est augue venenatis ligula, in convallis erat felis nec nisi. Curabitur at felis ut velit congue convallis. Nulla facilisi.</p>
-              <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Quos, dicta impedit. Modi maxime cupiditate corrupti molestias, praesentium inventore alias labore ratione magnam dicta sint, corporis illum consequatur voluptatibus enim voluptatum?</p>
-              <p>Phasellus non felis massa. Donec finibus, nulla eu facilisis sodales, est augue venenatis ligula, in convallis erat felis nec nisi. Curabitur at felis ut velit congue convallis. Nulla facilisi.</p>
-              <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Quos, dicta impedit. Modi maxime cupiditate corrupti molestias, praesentium inventore alias labore ratione magnam dicta sint, corporis illum consequatur voluptatibus enim voluptatum?</p>
-              <p>Phasellus non felis massa. Donec finibus, nulla eu facilisis sodales, est augue venenatis ligula, in convallis erat felis nec nisi. Curabitur at felis ut velit congue convallis. Nulla facilisi.</p>
-              <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Quos, dicta impedit. Modi maxime cupiditate corrupti molestias, praesentium inventore alias labore ratione magnam dicta sint, corporis illum consequatur voluptatibus enim voluptatum?</p>
-              <p>Phasellus non felis massa. Donec finibus, nulla eu facilisis sodales, est augue venenatis ligula, in convallis erat felis nec nisi. Curabitur at felis ut velit congue convallis. Nulla facilisi.</p>
-              <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Quos, dicta impedit. Modi maxime cupiditate corrupti molestias, praesentium inventore alias labore ratione magnam dicta sint, corporis illum consequatur voluptatibus enim voluptatum?</p>
-              <p>Phasellus non felis massa. Donec finibus, nulla eu facilisis sodales, est augue venenatis ligula, in convallis erat felis nec nisi. Curabitur at felis ut velit congue convallis. Nulla facilisi.</p>
-              <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Quos, dicta impedit. Modi maxime cupiditate corrupti molestias, praesentium inventore alias labore ratione magnam dicta sint, corporis illum consequatur voluptatibus enim voluptatum?</p>
-              <p>Phasellus non felis massa. Donec finibus, nulla eu facilisis sodales, est augue venenatis ligula, in convallis erat felis nec nisi. Curabitur at felis ut velit congue convallis. Nulla facilisi.</p>
-              <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Quos, dicta impedit. Modi maxime cupiditate corrupti molestias, praesentium inventore alias labore ratione magnam dicta sint, corporis illum consequatur voluptatibus enim voluptatum?</p>
-              <p>Phasellus non felis massa. Donec finibus, nulla eu facilisis sodales, est augue venenatis ligula, in convallis erat felis nec nisi. Curabitur at felis ut velit congue convallis. Nulla facilisi.</p>
-              <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Quos, dicta impedit. Modi maxime cupiditate corrupti molestias, praesentium inventore alias labore ratione magnam dicta sint, corporis illum consequatur voluptatibus enim voluptatum?</p>
-              <p>Phasellus non felis massa. Donec finibus, nulla eu facilisis sodales, est augue venenatis ligula, in convallis erat felis nec nisi. Curabitur at felis ut velit congue convallis. Nulla facilisi.</p>
-              
-            </div>
-          </ResponsiveOverlay>
+        {/* CTA crear producto (desktop/tablet) */}
+        <Button asChild>
+          <Link href="/dashboard/products/new">
+            <Plus className="mr-2 h-4 w-4" />
+            Nuevo producto
+          </Link>
+        </Button>
+      </div>
 
-          <Button onClick={() => setOpen(true)} className="w-full">
-            Ver detalle
-          </Button>
-        </CardContent>
-      </Card>
+      {/* Lista / tabla responsive */}
+      <ProductsTable data={products} rowHrefBase="/dashboard/products" />
 
-      {/* Puedes duplicar este bloque para más cards con diferentes dummy data */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Servicio Demo</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <Image
-            src="/vercel.svg"
-            alt="Dummy"
-            width={300}
-            height={180}
-            className="w-full rounded-md border object-cover"
-          />
-          <p className="text-sm text-muted-foreground">
-            Otro ejemplo de card en el dashboard.
-          </p>
-          <p className="text-xs text-muted-foreground">Uso: test de diseño.</p>
-          <Button className="w-full">Explorar</Button>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Recurso Demo</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <Image
-            src="/globe.svg"
-            alt="Dummy"
-            width={300}
-            height={180}
-            className="w-full rounded-md border object-cover"
-          />
-          <p className="text-sm text-muted-foreground">
-            Tercer ejemplo para completar la grilla de tres columnas.
-          </p>
-          <p className="text-xs text-muted-foreground">Uso: validar layout.</p>
-          <Button className="w-full">Abrir</Button>
-        </CardContent>
-      </Card>
-    </div>
+      {/* Floating Action Button (mobile only) */}
+      <div
+        className="
+          md:hidden fixed right-6 z-60
+          // Place FAB above the bottom nav (3.5rem) + some gap + safe area
+          bottom-[calc(env(safe-area-inset-bottom)+4.5rem)]
+        "
+      >
+        <Button
+          size="icon"
+          asChild
+          className="h-12 w-12 rounded-full shadow-lg"
+          aria-label="Crear producto"
+        >
+          <Link href="/dashboard/products/new">
+            <Plus className="h-5 w-5" />
+          </Link>
+        </Button>
+      </div>
+    </main>
   );
 }
