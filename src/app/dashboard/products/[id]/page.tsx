@@ -7,10 +7,10 @@ import { Card, CardContent } from "@/components/ui/card";
 import ProductForm from "@/components/dashboard/ProductForm";
 import { productModel, type Product } from "@/types/product";
 
-type PageProps = {
-  params: { id: string };
-};
+// No exportes PageProps, Next 15 valida internamente que params sea Promise
+type RouteParams = { id: string };
 
+// Construye la URL base considerando proxies (Vercel, etc.)
 async function getBaseUrl(): Promise<string> {
   const h = await headers(); // Next 15: async
   const host = h.get("x-forwarded-host") ?? h.get("host");
@@ -18,6 +18,7 @@ async function getBaseUrl(): Promise<string> {
   return host ? `${proto}://${host}` : "";
 }
 
+// Obtiene un producto autenticado
 async function getProduct(id: number): Promise<Product | null> {
   const h = await headers();
   const cookie = h.get("cookie") ?? ""; // reenviamos cookies al API
@@ -35,17 +36,25 @@ async function getProduct(id: number): Promise<Product | null> {
   return item;
 }
 
-export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
-  const idNum = Number(params.id);
+// ✅ generateMetadata con params asíncronos
+export async function generateMetadata(
+  { params }: { params: Promise<RouteParams> }
+): Promise<Metadata> {
+  const { id } = await params;
+  const idNum = Number(id);
   const title = Number.isFinite(idNum) ? `Producto #${idNum}` : "Producto";
   return { title };
 }
 
-export default async function ProductDetailPage({ params }: PageProps) {
-  const id = Number(params.id);
-  if (!Number.isFinite(id)) notFound();
+// ✅ Page principal con params asíncronos
+export default async function ProductDetailPage(
+  { params }: { params: Promise<RouteParams> }
+) {
+  const { id } = await params;
+  const idNum = Number(id);
+  if (!Number.isFinite(idNum)) notFound();
 
-  const product = await getProduct(id);
+  const product = await getProduct(idNum);
   if (!product) notFound();
 
   return (
@@ -57,7 +66,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
 
       <Card>
         <CardContent className="p-6">
-          <ProductForm mode="view" product={product} productId={id} />
+          <ProductForm mode="view" product={product} productId={idNum} />
         </CardContent>
       </Card>
     </div>
