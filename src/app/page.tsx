@@ -34,7 +34,8 @@ export default function Home() {
         </div>
       </section>
 
-      <footer className="absolute bottom-6 text-sm text-muted-foreground">
+      {/* CHANGED: normal flow + margin to avoid mobile-bottom-nav overlap */}
+      <footer className="mt-10 mb-16 sm:mb-0 text-sm text-muted-foreground text-center">
         © {new Date().getFullYear()} Meowstic Shop — Donde la magia y la tecnología se encuentran ✨
       </footer>
     </main>

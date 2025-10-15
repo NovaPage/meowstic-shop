@@ -46,7 +46,7 @@ export default function ProductsList({
     <div className="space-y-4">
       <div className="max-w-sm">
         <Input
-          placeholder="Search products…"
+          placeholder="Buscando Productos…"
           defaultValue={sp.get("q") ?? ""}
           onChange={(e) => onClientSearch(e.target.value)}
         />
