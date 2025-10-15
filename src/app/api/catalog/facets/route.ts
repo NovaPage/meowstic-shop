@@ -1,5 +1,6 @@
 // src/app/api/catalog/facets/route.ts
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
 import { getRouteHandlerClient } from "@/lib/supabase/server";
 
 const TABLE = "products" as const;
@@ -16,8 +17,8 @@ function json<T>(body: T, init?: ResponseInit) {
   return NextResponse.json(body, init);
 }
 
-// Optional route revalidation hint (changes infrequently)
-export const revalidate = 60 * 60; // 1 hour
+// ✅ Must be a literal (not an expression) in App Router
+export const revalidate = 3600; // 1 hour
 
 /**
  * Facets endpoint (public)
@@ -74,11 +75,11 @@ export async function GET(_req: NextRequest) {
       }))
       .sort((a, b) => a.label.localeCompare(b.label, undefined, { sensitivity: "base" }));
 
-    return new NextResponse(
-      JSON.stringify({
+    return NextResponse.json(
+      {
         options,
         totalDistinct: options.length,
-      }),
+      },
       {
         status: 200,
         headers: {
